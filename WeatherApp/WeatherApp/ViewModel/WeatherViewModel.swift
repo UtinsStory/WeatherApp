@@ -14,12 +14,14 @@ final class WeatherViewModel: NSObject {
     private let locationManager = CLLocationManager()
     
     private var currentWeather: CurrentWeatherModel?
-    private var forecast: WeatherForecastModel?
+    var forecast: WeatherForecastModel?
     
     var onUpdate: (() -> Void)?
+    var onError: ((String) -> Void)?
     
-    init(weatherService: WeatherServiceProtocol) {
-        self.weatherService = WeatherService()
+    init(weatherService: WeatherServiceProtocol = WeatherService()) {
+        self.weatherService = weatherService
+        super.init()
         locationManager.delegate = self
     }
     
@@ -27,16 +29,11 @@ final class WeatherViewModel: NSObject {
         locationManager.requestWhenInUseAuthorization()
         
         switch locationManager.authorizationStatus {
-            
         case .notDetermined:
             break
-        case .restricted:
+        case .restricted, .denied:
             Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
-        case .denied:
-            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
-        case .authorizedAlways:
-            locationManager.requestLocation()
-        case .authorizedWhenInUse:
+        case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         @unknown default:
             Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
@@ -45,17 +42,34 @@ final class WeatherViewModel: NSObject {
     
     func fetchWeather(lat: Double, lon: Double) async throws {
         do {
+            print("Начало загрузки погоды для lat: \(lat), lon: \(lon)")
             async let current = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
             async let forecast = try await weatherService.fetchWeatherForecast(lat: lat, lon: lon, days: 7)
             
             self.currentWeather = try await current
             self.forecast = try await forecast
-            
+            print("Погода загружена: \(self.currentWeather?.location.name ?? "нет данных")")
             DispatchQueue.main.async { [weak self] in
                 self?.onUpdate?()
             }
         } catch {
-            throw WeatherServiceError.networkError(error)
+            print("Ошибка загрузки погоды: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                self?.onError?(error.localizedDescription)
+            }
+            throw error
+        }
+    }
+    
+    func loadWeatherIcon(for iconPath: String) async -> UIImage? {
+        let fullURLString = "https:\(iconPath)"
+        guard let url = URL(string: fullURLString) else { return nil }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return UIImage(data: data)
+        } catch {
+            return nil
         }
     }
     
@@ -71,6 +85,24 @@ final class WeatherViewModel: NSObject {
     var conditionText: String {
         currentWeather?.current.condition.text ?? ""
     }
+    
+    var todayAndTomorrowHours: [WeatherForecastModel.ForecastDay.Hour] {
+        guard let forecastDays = forecast?.forecast.forecastday else { return [] }
+        guard forecastDays.count >= 2 else { return [] }
+        
+        let now = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        
+        let todayHours = forecastDays[0].hour.filter {
+            guard let hourDate = formatter.date(from: $0.time) else { return false }
+            return hourDate >= now
+        }
+        
+        let tomorrowHours = forecastDays[1].hour
+        return todayHours + tomorrowHours
+    }
+    
 }
 
 extension WeatherViewModel: CLLocationManagerDelegate {
@@ -78,7 +110,11 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
+        print("Получены координаты: \(locations.last?.coordinate ?? CLLocationCoordinate2D())")
         guard let location = locations.last else {
+            DispatchQueue.main.async { [weak self] in
+                self?.onError?("Не удалось получить координаты")
+            }
             Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
             return
         }
@@ -92,14 +128,33 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didFailWithError error: Error
     ) {
-        print("Не удалось определить геолокацию: \(error.localizedDescription)")
+        print("Ошибка геолокации: \(error.localizedDescription)")
+        DispatchQueue.main.async { [weak self] in
+            self?.onError?("Не удалось определить местоположение: \(error.localizedDescription)")
+        }
         Task {
             try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon)
         }
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        requestWeatherForCurrentLocation()
+        print("Статус авторизации: \(manager.authorizationStatus.rawValue)")
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            break
+        case .restricted, .denied:
+            DispatchQueue.main.async { [weak self] in
+                self?.onError?("Доступ к геолокации запрещён. Используется погода для Москвы.")
+            }
+            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        @unknown default:
+            DispatchQueue.main.async { [weak self] in
+                self?.onError?("Неизвестный статус геолокации. Используется погода для Москвы.")
+            }
+            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
+        }
     }
 }
 
