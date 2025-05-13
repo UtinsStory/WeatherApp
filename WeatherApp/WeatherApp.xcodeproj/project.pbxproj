@@ -14,7 +14,7 @@
 		BF4EDC702DD334B200E98D67 /* Exceptions for "WeatherApp" folder in "WeatherApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Foundation/Info.plist,
 			);
 			target = BF4EDC5D2DD334B000E98D67 /* WeatherApp */;
 		};
