@@ -1,5 +1,5 @@
 //
-//  MainViewController.swift
+//  WeatherViewController.swift
 //  WeatherApp
 //
 //  Created by Никита Соловьев on 13.05.2025.
@@ -7,8 +7,10 @@
 
 import UIKit
 
-final class MainViewController: UIViewController {
-
+final class WeatherViewController: UIViewController {
+    
+    private let viewModel: WeatherViewModel
+    
     private lazy var cityLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 36, weight: .bold)
@@ -69,14 +71,33 @@ final class MainViewController: UIViewController {
         return tableView
     }()
     
+    init(viewModel: WeatherViewModel) {
+        self.viewModel = viewModel
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        viewModel.onUpdate = { [weak self] in
+            guard let self = self else { return }
+            self.cityLabel.text = viewModel.cityName
+            self.temperatureLabel.text = viewModel.temperature
+            self.conditionLabel.text = viewModel.conditionText
+            self.hourForecastCollectionView.reloadData()
+            self.weeklyForecastTableView.reloadData()
+        }
+        
+        viewModel.requestWeatherForCurrentLocation()
     }
-
+    
 }
 
 // MARK: - UICollectionViewDataSource
-extension MainViewController: UICollectionViewDataSource {
+extension WeatherViewController: UICollectionViewDataSource {
     func collectionView(
         _ collectionView: UICollectionView,
         numberOfItemsInSection section: Int
@@ -95,12 +116,12 @@ extension MainViewController: UICollectionViewDataSource {
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
-extension MainViewController: UICollectionViewDelegateFlowLayout {
+extension WeatherViewController: UICollectionViewDelegateFlowLayout {
     
 }
 
 // MARK: - UITableViewDataSource
-extension MainViewController: UITableViewDataSource {
+extension WeatherViewController: UITableViewDataSource {
     func tableView(
         _ tableView: UITableView,
         numberOfRowsInSection section: Int
@@ -119,7 +140,7 @@ extension MainViewController: UITableViewDataSource {
 }
 
 // MARK: - UITableViewDelegate
-extension MainViewController: UITableViewDelegate {
+extension WeatherViewController: UITableViewDelegate {
     
 }
 

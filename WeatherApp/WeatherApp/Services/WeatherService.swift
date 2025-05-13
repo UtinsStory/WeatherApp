@@ -27,7 +27,20 @@ enum WeatherServiceError: Error, LocalizedError {
     }
 }
 
-final class WeatherService {
+protocol WeatherServiceProtocol {
+    func fetchCurrentWeather(
+        lat: Double,
+        lon: Double
+    ) async throws -> CurrentWeatherModel
+    
+    func fetchWeatherForecast(
+        lat: Double,
+        lon: Double,
+        days: Int
+    ) async throws -> WeatherForecastModel
+}
+
+final class WeatherService: WeatherServiceProtocol {
     
     private let apiKey = "fa8b3df74d4042b9aa7135114252304"
     private let baseURL = "https://api.weatherapi.com/v1/"
