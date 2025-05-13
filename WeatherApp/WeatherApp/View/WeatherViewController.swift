@@ -61,6 +61,7 @@ final class WeatherViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.register(HourForecastCollectionViewCell.self, forCellWithReuseIdentifier: HourForecastCollectionViewCell.reuseIdentifier)
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.backgroundColor = .clear
         
         return collectionView
     }()
@@ -73,6 +74,7 @@ final class WeatherViewController: UIViewController {
             WeeklyForecastTableViewCell.self,
             forCellReuseIdentifier: WeeklyForecastTableViewCell.reuseIdentifier
         )
+        tableView.backgroundColor = .clear
         
         return tableView
     }()
@@ -124,12 +126,19 @@ final class WeatherViewController: UIViewController {
         setupUI()
         bindViewModel()
         startLoading()
-        setupGradientAnimation()
         viewModel.requestWeatherForCurrentLocation()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Обновляем frame градиента при изменении размеров backgroundView
+        if let gradientLayer = backgroundView.layer.sublayers?.first as? CAGradientLayer {
+            gradientLayer.frame = backgroundView.bounds
+        }
+    }
+    
     private func setupUI() {
-        view.backgroundColor = .red
+        view.backgroundColor = .clear
         [
             backgroundView,
             cityLabel,
@@ -153,7 +162,7 @@ final class WeatherViewController: UIViewController {
             
             cityLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             cityLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            cityLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 20),
+            cityLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             temperatureLabel.topAnchor.constraint(equalTo: cityLabel.bottomAnchor, constant: 10),
             temperatureLabel.leadingAnchor.constraint(equalTo: cityLabel.leadingAnchor),
@@ -187,20 +196,36 @@ final class WeatherViewController: UIViewController {
             retryButton.heightAnchor.constraint(equalToConstant: 44)
             
         ])
+        
     }
     
-    private func setupGradientAnimation() {
-        guard let gradientLayer = backgroundView.layer.sublayers?.first as? CAGradientLayer else { return }
-        
-        let colorAnimation = CABasicAnimation(keyPath: "colors")
-        colorAnimation.fromValue = [UIColor.systemBlue.cgColor, UIColor.systemIndigo.cgColor]
-        colorAnimation.toValue = [UIColor.systemIndigo.cgColor, UIColor.systemPurple.cgColor]
-        colorAnimation.duration = 5.0
-        colorAnimation.autoreverses = true
-        colorAnimation.repeatCount = .infinity
-        
-        gradientLayer.add(colorAnimation, forKey: "colorAnimation")
-    }
+    private func updateGradientForWeather(condition: String?) {
+            guard let gradientLayer = backgroundView.layer.sublayers?.first as? CAGradientLayer else { return }
+            
+            let colors: [CGColor]
+            switch condition?.lowercased() {
+            case "sunny", "clear", "ясно", "солнечно":
+                colors = [UIColor.systemYellow.cgColor, UIColor.systemBlue.cgColor]
+            case "cloudy", "overcast", "облачно", "пасмурно":
+                colors = [UIColor.systemGray.cgColor, UIColor.systemGray2.cgColor]
+            case "rain", "shower", "дождь":
+                colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
+            case "partly cloudy", "переменная облачность":
+                colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
+            default:
+                colors = [UIColor.systemBlue.cgColor, UIColor.systemIndigo.cgColor]
+            }
+            
+            gradientLayer.colors = colors
+            
+            let colorAnimation = CABasicAnimation(keyPath: "colors")
+            colorAnimation.fromValue = colors
+            colorAnimation.toValue = colors.reversed()
+            colorAnimation.duration = 5.0
+            colorAnimation.autoreverses = true
+            colorAnimation.repeatCount = .infinity
+            gradientLayer.add(colorAnimation, forKey: "colorAnimation")
+        }
     
     private func bindViewModel() {
         viewModel.onUpdate = { [weak self] in
@@ -212,6 +237,7 @@ final class WeatherViewController: UIViewController {
             self.weeklyForecast = self.viewModel.forecast?.forecast.forecastday ?? []
             self.hourForecastCollectionView.reloadData()
             self.weeklyForecastTableView.reloadData()
+            self.updateGradientForWeather(condition: self.viewModel.conditionText)
             self.stopLoading()
             self.hideError()
         }
@@ -225,21 +251,39 @@ final class WeatherViewController: UIViewController {
     
     private func startLoading() {
         activityIndicator.startAnimating()
-        [cityLabel, temperatureLabel, conditionLabel, hourForecastCollectionView, weeklyForecastTableView].forEach { $0.isHidden = true }
+        [
+            cityLabel,
+            temperatureLabel,
+            conditionLabel,
+            hourForecastCollectionView,
+            weeklyForecastTableView
+        ].forEach { $0.isHidden = true }
         errorLabel.isHidden = true
         retryButton.isHidden = true
     }
     
     private func stopLoading() {
         activityIndicator.stopAnimating()
-        [cityLabel, temperatureLabel, conditionLabel, hourForecastCollectionView, weeklyForecastTableView].forEach { $0.isHidden = false }
+        [
+            cityLabel,
+            temperatureLabel,
+            conditionLabel,
+            hourForecastCollectionView,
+            weeklyForecastTableView
+        ].forEach { $0.isHidden = false }
     }
     
     private func showError(_ message: String) {
         errorLabel.text = message
         errorLabel.isHidden = false
         retryButton.isHidden = false
-        [cityLabel, temperatureLabel, conditionLabel, hourForecastCollectionView, weeklyForecastTableView].forEach { $0.isHidden = true }
+        [
+            cityLabel,
+            temperatureLabel,
+            conditionLabel,
+            hourForecastCollectionView,
+            weeklyForecastTableView
+        ].forEach { $0.isHidden = true }
         activityIndicator.stopAnimating()
     }
     
