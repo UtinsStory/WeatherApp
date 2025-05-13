@@ -15,6 +15,11 @@ struct CurrentWeatherModel: Codable {
         let name: String
         let country: String
         let localTime: String
+        
+        enum CodingKeys: String, CodingKey {
+            case name, country
+            case localTime = "localtime"
+        }
     }
     
     struct Current: Codable {

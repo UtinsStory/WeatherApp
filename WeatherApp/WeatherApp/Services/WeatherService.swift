@@ -12,6 +12,7 @@ enum WeatherServiceError: Error, LocalizedError {
     case networkError(Error)
     case noData
     case decodingError(Error)
+    case invalidResponse
     
     var errorDescription: String? {
         switch self {
@@ -23,6 +24,8 @@ enum WeatherServiceError: Error, LocalizedError {
             return "Данные с сервера не получены."
         case .decodingError(let error):
             return "Ошибка декодирования ответа: \(error.localizedDescription)"
+        case .invalidResponse:
+            return "Сервер вернул некорректный ответ."
         }
     }
 }
@@ -49,16 +52,29 @@ final class WeatherService: WeatherServiceProtocol {
         lat: Double,
         lon: Double
     ) async throws -> CurrentWeatherModel {
-        let urlString = "\(baseURL)current.json?key=\(apiKey)&q=\(lat),\(lon)"
+        let urlString = "\(baseURL)current.json?key=\(apiKey)&q=\(lat),\(lon)&lang=ru"
         guard let url = URL(string: urlString) else {
             throw WeatherServiceError.invalidURL
         }
         
-        let (data,_) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("HTTP-статус для current: \(httpResponse.statusCode)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Ответ current: \(jsonString)")
+            }
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw WeatherServiceError.invalidResponse
+        }
+        
         do {
             let weather = try JSONDecoder().decode(CurrentWeatherModel.self, from: data)
             return weather
         } catch {
+            print("Ошибка декодирования current: \(error)")
             throw WeatherServiceError.decodingError(error)
         }
     }
@@ -73,11 +89,24 @@ final class WeatherService: WeatherServiceProtocol {
             throw WeatherServiceError.invalidURL
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("HTTP-статус для forecast: \(httpResponse.statusCode)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Ответ forecast: \(jsonString)")
+            }
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw WeatherServiceError.invalidResponse
+        }
+        
         do {
             let forecast = try JSONDecoder().decode(WeatherForecastModel.self, from: data)
             return forecast
         } catch {
+            print("Ошибка декодирования forecast: \(error)")
             throw WeatherServiceError.decodingError(error)
         }
     }
