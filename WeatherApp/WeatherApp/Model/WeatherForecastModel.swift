@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct WeatherForecast: Codable {
+struct WeatherForecastModel: Codable {
     let location: CurrentWeatherModel.Location
     let forecast: Forecast
     
