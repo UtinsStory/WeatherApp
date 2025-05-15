@@ -16,7 +16,7 @@ final class WeatherViewController: UIViewController {
     
     private lazy var cityLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 36, weight: .bold)
+        label.font = .systemFont(ofSize: 30, weight: .regular)
         label.textColor = .white
         
         return label
@@ -24,7 +24,7 @@ final class WeatherViewController: UIViewController {
     
     private lazy var temperatureLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 48, weight: .bold)
+        label.font = .systemFont(ofSize: 70, weight: .bold)
         label.textColor = .white
         
         return label
@@ -32,7 +32,7 @@ final class WeatherViewController: UIViewController {
     
     private lazy var conditionLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 24, weight: .regular)
+        label.font = .systemFont(ofSize: 18, weight: .regular)
         label.textColor = .white
         
         return label
@@ -161,25 +161,22 @@ final class WeatherViewController: UIViewController {
             backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             cityLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            cityLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            cityLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            cityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             temperatureLabel.topAnchor.constraint(equalTo: cityLabel.bottomAnchor, constant: 10),
-            temperatureLabel.leadingAnchor.constraint(equalTo: cityLabel.leadingAnchor),
-            temperatureLabel.trailingAnchor.constraint(equalTo: cityLabel.trailingAnchor),
+            temperatureLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             conditionLabel.topAnchor.constraint(equalTo: temperatureLabel.bottomAnchor, constant: 10),
-            conditionLabel.leadingAnchor.constraint(equalTo: cityLabel.leadingAnchor),
-            conditionLabel.trailingAnchor.constraint(equalTo: cityLabel.trailingAnchor),
+            conditionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             hourForecastCollectionView.topAnchor.constraint(equalTo: conditionLabel.bottomAnchor, constant: 20),
-            hourForecastCollectionView.leadingAnchor.constraint(equalTo: cityLabel.leadingAnchor),
-            hourForecastCollectionView.trailingAnchor.constraint(equalTo: cityLabel.trailingAnchor),
+            hourForecastCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            hourForecastCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             hourForecastCollectionView.heightAnchor.constraint(equalToConstant: 100),
             
-            weeklyForecastTableView.topAnchor.constraint(equalTo: hourForecastCollectionView.bottomAnchor, constant: 10),
-            weeklyForecastTableView.leadingAnchor.constraint(equalTo: cityLabel.leadingAnchor),
-            weeklyForecastTableView.trailingAnchor.constraint(equalTo: cityLabel.trailingAnchor),
+            weeklyForecastTableView.topAnchor.constraint(equalTo: hourForecastCollectionView.bottomAnchor, constant: 30),
+            weeklyForecastTableView.leadingAnchor.constraint(equalTo: hourForecastCollectionView.leadingAnchor),
+            weeklyForecastTableView.trailingAnchor.constraint(equalTo: hourForecastCollectionView.trailingAnchor),
             weeklyForecastTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),

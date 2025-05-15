@@ -87,7 +87,7 @@ final class WeeklyForecastTableViewCell: UITableViewCell {
             dayLabel.text = model.date
         }
         
-        temperatureLabel.text = "\(Int(model.day.mintempC))° / \(Int(model.day.maxtempC))°"
+        temperatureLabel.text = "\(Int(model.day.maxtempC))° / \(Int(model.day.mintempC))°"
         conditionImageView.image = nil
         
         Task {
