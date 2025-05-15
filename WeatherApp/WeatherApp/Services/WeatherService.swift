@@ -45,7 +45,7 @@ protocol WeatherServiceProtocol {
 
 final class WeatherService: WeatherServiceProtocol {
     
-    private let apiKey = "fa8b3df74d4042b9aa7135114252304"
+    private let apiKey = "fa8b3df74d4042b9aa7135114252304" // Этот ключ возвращает прогноз только на 3 дня
     private let baseURL = "https://api.weatherapi.com/v1/"
     
     func fetchCurrentWeather(
@@ -59,12 +59,12 @@ final class WeatherService: WeatherServiceProtocol {
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
-        if let httpResponse = response as? HTTPURLResponse {
-            print("HTTP-статус для current: \(httpResponse.statusCode)")
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Ответ current: \(jsonString)")
-            }
-        }
+//        if let httpResponse = response as? HTTPURLResponse {
+//            print("HTTP-статус для current: \(httpResponse.statusCode)")
+//            if let jsonString = String(data: data, encoding: .utf8) {
+//                print("Ответ current: \(jsonString)")
+//            }
+//        }
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw WeatherServiceError.invalidResponse
@@ -74,7 +74,6 @@ final class WeatherService: WeatherServiceProtocol {
             let weather = try JSONDecoder().decode(CurrentWeatherModel.self, from: data)
             return weather
         } catch {
-            print("Ошибка декодирования current: \(error)")
             throw WeatherServiceError.decodingError(error)
         }
     }
@@ -91,22 +90,23 @@ final class WeatherService: WeatherServiceProtocol {
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
-        if let httpResponse = response as? HTTPURLResponse {
-            print("HTTP-статус для forecast: \(httpResponse.statusCode)")
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Ответ forecast: \(jsonString)")
-            }
-        }
+//        if let httpResponse = response as? HTTPURLResponse {
+//            print("HTTP-статус для forecast: \(httpResponse.statusCode)")
+//            if let jsonString = String(data: data, encoding: .utf8) {
+//                print("Ответ forecast: \(jsonString)")
+//            }
+//        }
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw WeatherServiceError.invalidResponse
         }
         
         do {
-            let forecast = try JSONDecoder().decode(WeatherForecastModel.self, from: data)
-            return forecast
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .useDefaultKeys
+            let forecastModel = try decoder.decode(WeatherForecastModel.self, from: data)
+            return forecastModel
         } catch {
-            print("Ошибка декодирования forecast: \(error)")
             throw WeatherServiceError.decodingError(error)
         }
     }

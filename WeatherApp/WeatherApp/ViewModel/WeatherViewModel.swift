@@ -42,18 +42,15 @@ final class WeatherViewModel: NSObject {
     
     func fetchWeather(lat: Double, lon: Double) async throws {
         do {
-            print("Начало загрузки погоды для lat: \(lat), lon: \(lon)")
             async let current = try await weatherService.fetchCurrentWeather(lat: lat, lon: lon)
             async let forecast = try await weatherService.fetchWeatherForecast(lat: lat, lon: lon, days: 7)
             
             self.currentWeather = try await current
             self.forecast = try await forecast
-            print("Погода загружена: \(self.currentWeather?.location.name ?? "нет данных")")
             DispatchQueue.main.async { [weak self] in
                 self?.onUpdate?()
             }
         } catch {
-            print("Ошибка загрузки погоды: \(error.localizedDescription)")
             DispatchQueue.main.async { [weak self] in
                 self?.onError?(error.localizedDescription)
             }
@@ -110,7 +107,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-        print("Получены координаты: \(locations.last?.coordinate ?? CLLocationCoordinate2D())")
         guard let location = locations.last else {
             DispatchQueue.main.async { [weak self] in
                 self?.onError?("Не удалось получить координаты")
@@ -128,7 +124,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didFailWithError error: Error
     ) {
-        print("Ошибка геолокации: \(error.localizedDescription)")
         DispatchQueue.main.async { [weak self] in
             self?.onError?("Не удалось определить местоположение: \(error.localizedDescription)")
         }
@@ -138,7 +133,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        print("Статус авторизации: \(manager.authorizationStatus.rawValue)")
         switch manager.authorizationStatus {
         case .notDetermined:
             break
