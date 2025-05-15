@@ -8,6 +8,7 @@
 import UIKit
 import CoreLocation
 
+@MainActor
 protocol WeatherViewModelProtocol: AnyObject {
     var onUpdate: (() -> Void)? { get set }
     var onError: ((String) -> Void)? { get set }

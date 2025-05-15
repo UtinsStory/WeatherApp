@@ -8,6 +8,7 @@
 import XCTest
 @testable import WeatherApp
 
+@MainActor
 final class WeatherAppTests: XCTestCase {
     
     var weatherService: MockWeatherService!
