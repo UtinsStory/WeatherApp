@@ -18,6 +18,7 @@ protocol WeatherViewModelProtocol: AnyObject {
     var forecast: WeatherForecastModel? { get }
     
     func requestWeatherForCurrentLocation()
+    func fetchWeather(lat: Double, lon: Double) async throws
     func loadWeatherIcon(for iconPath: String) async -> UIImage?
 }
 

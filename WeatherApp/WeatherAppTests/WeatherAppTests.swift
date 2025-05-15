@@ -6,30 +6,55 @@
 //
 
 import XCTest
+@testable import WeatherApp
 
 final class WeatherAppTests: XCTestCase {
+    
+    var weatherService: MockWeatherService!
+    var viewModel: WeatherViewModelProtocol!
+    
+    override func setUp() {
+        super.setUp()
+        weatherService = MockWeatherService()
+        viewModel = WeatherViewModel(weatherService: weatherService)
+    }
+    
+    override func tearDown() {
+        weatherService = nil
+        viewModel = nil
+        super.tearDown()
+    }
+    
+    func testWeatherFetchSucceeds() async {
+        // Given
+        let expectation = XCTestExpectation(description: "onUpdate called")
+        viewModel.onUpdate = { expectation.fulfill() }
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        // When
+        try? await viewModel.fetchWeather(lat: 55.75, lon: 37.61)
+
+        // Then
+        await fulfillment(of: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.cityName, "Москва")
+        XCTAssertEqual(viewModel.temperature, "20°")
+        XCTAssertEqual(viewModel.conditionText, "Ясно")
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        measure {
-            // Put the code you want to measure the time of here.
+    func testWeatherFetchFails() async {
+        // Given
+        weatherService.shouldFail = true
+        let expectation = expectation(description: "Error callback called")
+        viewModel.onError = { error in
+            XCTAssertTrue(error.contains("Данные с сервера не получены"))
+            expectation.fulfill()
         }
+        // When
+        do {
+            try await viewModel.fetchWeather(lat: 0, lon: 0)
+        } catch {
+            // Ошибка ожидается
+        }
+        // Then
+        await fulfillment(of: [expectation], timeout: 1)
     }
-
 }
