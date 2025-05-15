@@ -197,32 +197,32 @@ final class WeatherViewController: UIViewController {
     }
     
     private func updateGradientForWeather(condition: String?) {
-            guard let gradientLayer = backgroundView.layer.sublayers?.first as? CAGradientLayer else { return }
-            
-            let colors: [CGColor]
-            switch condition?.lowercased() {
-            case "sunny", "clear", "ясно", "солнечно":
-                colors = [UIColor.systemYellow.cgColor, UIColor.systemBlue.cgColor]
-            case "cloudy", "overcast", "облачно", "пасмурно":
-                colors = [UIColor.systemGray.cgColor, UIColor.systemGray2.cgColor]
-            case "rain", "shower", "дождь":
-                colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
-            case "partly cloudy", "переменная облачность":
-                colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
-            default:
-                colors = [UIColor.systemBlue.cgColor, UIColor.systemIndigo.cgColor]
-            }
-            
-            gradientLayer.colors = colors
-            
-            let colorAnimation = CABasicAnimation(keyPath: "colors")
-            colorAnimation.fromValue = colors
-            colorAnimation.toValue = colors.reversed()
-            colorAnimation.duration = 5.0
-            colorAnimation.autoreverses = true
-            colorAnimation.repeatCount = .infinity
-            gradientLayer.add(colorAnimation, forKey: "colorAnimation")
+        guard let gradientLayer = backgroundView.layer.sublayers?.first as? CAGradientLayer else { return }
+        
+        let colors: [CGColor]
+        switch condition?.lowercased() {
+        case "sunny", "clear", "ясно", "солнечно":
+            colors = [UIColor.systemYellow.cgColor, UIColor.systemBlue.cgColor]
+        case "cloudy", "overcast", "облачно", "пасмурно":
+            colors = [UIColor.systemGray.cgColor, UIColor.systemGray2.cgColor]
+        case "rain", "shower", "дождь", "местами дождь", "небольшой ливневый дождь":
+            colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
+        case "partly cloudy", "переменная облачность", "дымка":
+            colors = [UIColor.systemBlue.cgColor, UIColor.systemGray.cgColor]
+        default:
+            colors = [UIColor.systemBlue.cgColor, UIColor.systemIndigo.cgColor]
         }
+        
+        gradientLayer.colors = colors
+        
+        let colorAnimation = CABasicAnimation(keyPath: "colors")
+        colorAnimation.fromValue = colors
+        colorAnimation.toValue = colors.reversed()
+        colorAnimation.duration = 5.0
+        colorAnimation.autoreverses = true
+        colorAnimation.repeatCount = .infinity
+        gradientLayer.add(colorAnimation, forKey: "colorAnimation")
+    }
     
     private func bindViewModel() {
         viewModel.onUpdate = { [weak self] in
@@ -369,15 +369,25 @@ extension WeatherViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension WeatherViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    func tableView(
+        _ tableView: UITableView,
+        heightForRowAt indexPath: IndexPath
+    ) -> CGFloat {
         return 60
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(
+        _ tableView: UITableView,
+        didSelectRowAt indexPath: IndexPath
+    ) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    func tableView(
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
         cell.layer.cornerRadius = 8
         cell.layer.masksToBounds = true
         cell.backgroundColor = UIColor.white.withAlphaComponent(0.1)
@@ -385,5 +395,58 @@ extension WeatherViewController: UITableViewDelegate {
         let margins = UIEdgeInsets(top: 5, left: 20, bottom: 5, right: 20)
         cell.contentView.frame = cell.contentView.frame.inset(by: margins)
     }
+    
+    func tableView(
+        _ tableView: UITableView,
+        viewForHeaderInSection section: Int
+    ) -> UIView? {
+        let headerView = UIView()
+        headerView.backgroundColor = .clear
+        
+        let headerLabel = UILabel()
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        headerLabel.font = .systemFont(ofSize: 15, weight: .light)
+        headerLabel.textColor = .white
+        headerLabel.text = "Прогноз на \(weeklyForecast.count) \(pluralFormForDays(weeklyForecast.count))"
+        
+        headerView.addSubview(headerLabel)
+        
+        NSLayoutConstraint.activate([
+            headerLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 10),
+            headerLabel.topAnchor.constraint(equalTo: headerView.topAnchor),
+            headerLabel.bottomAnchor.constraint(equalTo: headerView.bottomAnchor)
+        ])
+        
+            return headerView
+            }
+    
+    func tableView(
+        _ tableView: UITableView,
+        heightForHeaderInSection section: Int
+    ) -> CGFloat {
+        return 40
+    }
 }
+
+// MARK: - Helper Methods
+extension WeatherViewController {
+    private func pluralFormForDays(_ count: Int) -> String {
+        let lastDigit = count % 10
+        let lastTwoDigits = count % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 14 {
+            return "дней"
+        }
+        
+        switch lastDigit {
+        case 1:
+            return "день"
+        case 2, 3, 4:
+            return "дня"
+        default:
+            return "дней"
+        }
+    }
+}
+
 
