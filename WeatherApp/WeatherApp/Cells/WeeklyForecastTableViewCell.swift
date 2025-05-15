@@ -11,8 +11,6 @@ final class WeeklyForecastTableViewCell: UITableViewCell {
     
     static let reuseIdentifier = "WeeklyForecastTableViewCell"
     
-    private let viewModel = WeatherViewModel()
-    
     private lazy var dayLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16)
@@ -75,7 +73,7 @@ final class WeeklyForecastTableViewCell: UITableViewCell {
         ])
     }
     
-    func configure(with model: WeatherForecastModel.ForecastDay) {
+    func configure(with model: WeatherForecastModel.ForecastDay, viewModel: WeatherViewModelProtocol) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         if let date = dateFormatter.date(from: model.date) {

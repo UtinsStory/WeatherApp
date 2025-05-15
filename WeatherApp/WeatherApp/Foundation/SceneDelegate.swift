@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         let weatherService = WeatherService()
-        let viewModel = WeatherViewModel(weatherService: weatherService)
+        let viewModel: WeatherViewModelProtocol = WeatherViewModel(weatherService: weatherService)
         window.rootViewController = WeatherViewController(viewModel: viewModel)
         self.window = window
         window.makeKeyAndVisible()

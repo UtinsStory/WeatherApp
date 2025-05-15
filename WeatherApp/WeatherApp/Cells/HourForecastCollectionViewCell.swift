@@ -11,8 +11,6 @@ final class HourForecastCollectionViewCell: UICollectionViewCell {
     
     static let reuseIdentifier = "HourForecastCollectionViewCell"
     
-    private let viewModel = WeatherViewModel()
-    
     private lazy var timeLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14)
@@ -74,7 +72,10 @@ final class HourForecastCollectionViewCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with model: WeatherForecastModel.ForecastDay.Hour) {
+    func configure(
+        with model: WeatherForecastModel.ForecastDay.Hour,
+        viewModel: WeatherViewModelProtocol
+    ) {
         timeLabel.text = String(model.time.suffix(5))
         temperatureLabel.text = "\(Int(model.tempC))°"
         conditionImageView.image = nil

@@ -8,7 +8,20 @@
 import UIKit
 import CoreLocation
 
-final class WeatherViewModel: NSObject {
+protocol WeatherViewModelProtocol: AnyObject {
+    var onUpdate: (() -> Void)? { get set }
+    var onError: ((String) -> Void)? { get set }
+    var cityName: String { get }
+    var temperature: String { get }
+    var conditionText: String { get }
+    var todayAndTomorrowHours: [WeatherForecastModel.ForecastDay.Hour] { get }
+    var forecast: WeatherForecastModel? { get }
+    
+    func requestWeatherForCurrentLocation()
+    func loadWeatherIcon(for iconPath: String) async -> UIImage?
+}
+
+final class WeatherViewModel: NSObject, WeatherViewModelProtocol {
     
     private let weatherService: WeatherServiceProtocol
     private let locationManager = CLLocationManager()

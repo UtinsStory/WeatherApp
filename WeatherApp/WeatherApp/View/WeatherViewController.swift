@@ -9,7 +9,7 @@ import UIKit
 
 final class WeatherViewController: UIViewController {
     
-    private let viewModel: WeatherViewModel
+    private let viewModel: WeatherViewModelProtocol
     
     private var hourlyForecast: [WeatherForecastModel.ForecastDay.Hour] = []
     private var weeklyForecast: [WeatherForecastModel.ForecastDay] = []
@@ -109,7 +109,7 @@ final class WeatherViewController: UIViewController {
         return button
     }()
     
-    init(viewModel: WeatherViewModel) {
+    init(viewModel: WeatherViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -316,7 +316,7 @@ extension WeatherViewController: UICollectionViewDataSource {
         }
         
         let hourModel = hourlyForecast[indexPath.item]
-        cell.configure(with: hourModel)
+        cell.configure(with: hourModel, viewModel: viewModel)
         
         return cell
     }
@@ -361,7 +361,7 @@ extension WeatherViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         let dayModel = weeklyForecast[indexPath.row]
-        cell.configure(with: dayModel)
+        cell.configure(with: dayModel, viewModel: viewModel)
         
         return cell
     }
