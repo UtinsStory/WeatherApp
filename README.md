@@ -16,5 +16,7 @@ API: www.weatherapi.com
 <p float="left">
 <img src="https://github.com/UtinsStory/WeatherApp/raw/master/WeatherApp/WeatherApp/Foundation/Screenshots/Location%20Access.png" width="197" height="427" /> 
 <img src="https://github.com/UtinsStory/WeatherApp/raw/master/WeatherApp/WeatherApp/Foundation/Screenshots/Loading.png" width="197" height="427" />
+<img src="https://github.com/UtinsStory/WeatherApp/raw/master/WeatherApp/WeatherApp/Foundation/Screenshots/Main%20screen%20success.png" width="197" height="427" /> 
+<img src="https://github.com/UtinsStory/WeatherApp/raw/master/WeatherApp/WeatherApp/Foundation/Screenshots/Location%20access%20denied.png" width="197" height="427" /> 
 <img src="https://github.com/UtinsStory/WeatherApp/raw/master/WeatherApp/WeatherApp/Foundation/Screenshots/Main%20scrren.png" width="197" height="427" />
 </p>
