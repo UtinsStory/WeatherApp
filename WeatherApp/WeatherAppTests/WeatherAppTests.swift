@@ -30,17 +30,17 @@ final class WeatherAppTests: XCTestCase {
         // Given
         let expectation = XCTestExpectation(description: "onUpdate called")
         viewModel.onUpdate = { expectation.fulfill() }
-
+        
         // When
         try? await viewModel.fetchWeather(lat: 55.75, lon: 37.61)
-
+        
         // Then
         await fulfillment(of: [expectation], timeout: 1.0)
         XCTAssertEqual(viewModel.cityName, "Москва")
         XCTAssertEqual(viewModel.temperature, "20°")
         XCTAssertEqual(viewModel.conditionText, "Ясно")
     }
-
+    
     func testWeatherFetchFails() async {
         // Given
         weatherService.shouldFail = true

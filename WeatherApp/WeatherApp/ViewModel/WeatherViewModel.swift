@@ -49,7 +49,6 @@ final class WeatherViewModel: NSObject, WeatherViewModelProtocol {
         case .notDetermined:
             break
         case .restricted, .denied:
-            //            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
             isLocationPermissionGranted = false
             DispatchQueue.main.async { [weak self] in
                 self?.onError?("Доступ к геолокации запрещён. Используется погода для Москвы.")

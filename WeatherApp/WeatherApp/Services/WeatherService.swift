@@ -59,13 +59,6 @@ final class WeatherService: WeatherServiceProtocol {
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
-//        if let httpResponse = response as? HTTPURLResponse {
-//            print("HTTP-статус для current: \(httpResponse.statusCode)")
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("Ответ current: \(jsonString)")
-//            }
-//        }
-        
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw WeatherServiceError.invalidResponse
         }
@@ -89,13 +82,6 @@ final class WeatherService: WeatherServiceProtocol {
         }
         
         let (data, response) = try await URLSession.shared.data(from: url)
-        
-//        if let httpResponse = response as? HTTPURLResponse {
-//            print("HTTP-статус для forecast: \(httpResponse.statusCode)")
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("Ответ forecast: \(jsonString)")
-//            }
-//        }
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw WeatherServiceError.invalidResponse
