@@ -17,6 +17,7 @@ protocol WeatherViewModelProtocol: AnyObject {
     var conditionText: String { get }
     var todayAndTomorrowHours: [WeatherForecastModel.ForecastDay.Hour] { get }
     var forecast: WeatherForecastModel? { get }
+    var isLocationPermissionGranted: Bool { get }
     
     func requestWeatherForCurrentLocation()
     func fetchWeather(lat: Double, lon: Double) async throws
@@ -30,6 +31,7 @@ final class WeatherViewModel: NSObject, WeatherViewModelProtocol {
     
     private var currentWeather: CurrentWeatherModel?
     var forecast: WeatherForecastModel?
+    var isLocationPermissionGranted: Bool = true
     
     var onUpdate: (() -> Void)?
     var onError: ((String) -> Void)?
@@ -47,8 +49,13 @@ final class WeatherViewModel: NSObject, WeatherViewModelProtocol {
         case .notDetermined:
             break
         case .restricted, .denied:
-            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
+            //            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
+            isLocationPermissionGranted = false
+            DispatchQueue.main.async { [weak self] in
+                self?.onError?("Доступ к геолокации запрещён. Используется погода для Москвы.")
+            }
         case .authorizedAlways, .authorizedWhenInUse:
+            isLocationPermissionGranted = true
             locationManager.requestLocation()
         @unknown default:
             Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
@@ -126,7 +133,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.onError?("Не удалось получить координаты")
             }
-            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
             return
         }
         
@@ -142,9 +148,6 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.onError?("Не удалось определить местоположение: \(error.localizedDescription)")
         }
-        Task {
-            try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon)
-        }
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -152,17 +155,18 @@ extension WeatherViewModel: CLLocationManagerDelegate {
         case .notDetermined:
             break
         case .restricted, .denied:
+            isLocationPermissionGranted = false
             DispatchQueue.main.async { [weak self] in
                 self?.onError?("Доступ к геолокации запрещён. Используется погода для Москвы.")
             }
-            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
         case .authorizedAlways, .authorizedWhenInUse:
+            isLocationPermissionGranted = true
             locationManager.requestLocation()
         @unknown default:
+            isLocationPermissionGranted = false
             DispatchQueue.main.async { [weak self] in
                 self?.onError?("Неизвестный статус геолокации. Используется погода для Москвы.")
             }
-            Task { try await fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
         }
     }
 }

@@ -99,7 +99,6 @@ final class WeatherViewController: UIViewController {
     
     private lazy var retryButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Повторить", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = .systemBlue
         button.layer.cornerRadius = 8
@@ -119,9 +118,6 @@ final class WeatherViewController: UIViewController {
     }
     
     override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-        
         super.viewDidLoad()
         setupUI()
         bindViewModel()
@@ -272,6 +268,10 @@ final class WeatherViewController: UIViewController {
     
     private func showError(_ message: String) {
         errorLabel.text = message
+        retryButton.setTitle(
+            viewModel.isLocationPermissionGranted ? "Повторить" : "ОК",
+            for: .normal
+        )
         errorLabel.isHidden = false
         retryButton.isHidden = false
         [
@@ -279,7 +279,7 @@ final class WeatherViewController: UIViewController {
             temperatureLabel,
             conditionLabel,
             hourForecastCollectionView,
-            weeklyForecastTableView
+            weeklyForecastTableView,
         ].forEach { $0.isHidden = true }
         activityIndicator.stopAnimating()
     }
@@ -291,7 +291,11 @@ final class WeatherViewController: UIViewController {
     
     @objc private func retryButtonTapped() {
         startLoading()
-        viewModel.requestWeatherForCurrentLocation()
+        if viewModel.isLocationPermissionGranted {
+            viewModel.requestWeatherForCurrentLocation()
+        } else {
+            Task { try await viewModel.fetchWeather(lat: Constants.moscowLat, lon: Constants.moscowLon) }
+        }
     }
 }
 
@@ -407,7 +411,9 @@ extension WeatherViewController: UITableViewDelegate {
         headerLabel.translatesAutoresizingMaskIntoConstraints = false
         headerLabel.font = .systemFont(ofSize: 15, weight: .light)
         headerLabel.textColor = .white
-        headerLabel.text = "Прогноз на \(weeklyForecast.count) \(pluralFormForDays(weeklyForecast.count))"
+        headerLabel.text = weeklyForecast.isEmpty
+        ? ""
+        : "Прогноз на \(weeklyForecast.count) \(pluralFormForDays(weeklyForecast.count))"
         
         headerView.addSubview(headerLabel)
         
@@ -417,14 +423,14 @@ extension WeatherViewController: UITableViewDelegate {
             headerLabel.bottomAnchor.constraint(equalTo: headerView.bottomAnchor)
         ])
         
-            return headerView
-            }
+        return headerView
+    }
     
     func tableView(
         _ tableView: UITableView,
         heightForHeaderInSection section: Int
     ) -> CGFloat {
-        return 40
+        return weeklyForecast.isEmpty ? 0 : 40
     }
 }
 
